@@ -1,4 +1,4 @@
-# 😃 PulseQueryViewer
+# 😃 PulseQueryViewer for IBM QRadar
 
 ## 📚 Table of Contents
 1. [Description](#description)
