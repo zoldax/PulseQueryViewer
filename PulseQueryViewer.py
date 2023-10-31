@@ -119,11 +119,14 @@ class PulseQueryViewer:
             with open(self.csv_file, 'w', newline='', encoding='utf-8') as csvfile:
                 fieldnames = ['Dashboard', 'Number', 'Name', 'Query']
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
-    
+
                 writer.writeheader()
+                line_count = 0
                 for row in self.results:
                     writer.writerow(row)
+                    line_count += 1
             print(f"Results have been written to {self.csv_file}")
+            print(f"Total lines written: {line_count}")
         except Exception as e:
             self.log_and_exit(f"An error occurred while writing to the CSV file: {str(e)}")
 
