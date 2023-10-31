@@ -25,6 +25,7 @@ Usage:
 Parameters:
     -f, --file: Specify the input JSON file (required).
     -c, --csv: Specify the output CSV file (optional).
+    --version: Show the version of the script.
 
 Outputs:
     - Console output of the parsed data.
@@ -157,13 +158,20 @@ def main():
     """
     Main function to handle command line arguments and run the script.
     """
+    script_version = "1.0"
+
     parser = argparse.ArgumentParser(description='PulseQueryViewer by Pascal Weber (zoldax)')
-    parser.add_argument('-f', '--file', help='Name of the JSON file', required=True)
-    parser.add_argument('-c', '--csv', help='Name of the output CSV file (optional)')
+    parser.add_argument('-f', '--file', help='Name of the JSON file', required=False)
+    parser.add_argument('-c', '--csv', help='Name of the output CSV file (optional)', required=False)
+    parser.add_argument('--version', action='version', version=f'%(prog)s {script_version}', help='Show the version of the script and exit')
+
     args = parser.parse_args()
-    
-    viewer = PulseQueryViewer(args.file, args.csv)
-    viewer.run()
+
+    if args.file:
+        viewer = PulseQueryViewer(args.file, args.csv)
+        viewer.run()
+    else:
+        parser.print_help()
 
 if __name__ == "__main__":
     main()
