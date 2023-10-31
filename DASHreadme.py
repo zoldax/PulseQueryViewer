@@ -43,7 +43,7 @@ if args.csv:
     try:
         with open(args.csv, 'w', newline='', encoding='utf-8') as csvfile:
             fieldnames = ['Number', 'Name', 'Query']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
 
             writer.writeheader()
             for row in results:
