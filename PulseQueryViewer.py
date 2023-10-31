@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
 
 """
-PulseQueryViewer: A tool for viewing queries and other details from a JSON file related to QRadar dashboards.
+PulseQueryViewer: A script to parse QRadar JSON exports, displaying the data in console or converting it to CSV.
 
 Author: Pascal Weber (zoldax)
+Date: 2023-10-31
+
+Usage:
+    python PulseQueryViewer.py -f input_file.json [-c output_file.csv]
+
+Parameters:
+    -f, --file: Specify the input JSON file (required).
+    -c, --csv: Specify the output CSV file (optional).
+
+Outputs:
+    - Console output of the parsed data.
+    - CSV file of the parsed data (if specified).
 """
 
 import json
@@ -13,84 +25,132 @@ import argparse
 import csv
 from typing import List, Dict, Optional
 
-# Set up logging
-logging.basicConfig(filename='ERROR.log', level=logging.ERROR)
-
+# Setting up logging
+logging.basicConfig(filename='ERROR.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class PulseQueryViewer:
-    def __init__(self, filename: str, csv_filename: Optional[str] = None):
-        self.filename = filename
-        self.csv_filename = csv_filename
-        self.data_dict = {}
+    """
+    A class to parse QRadar JSON exports and convert them to a readable format or CSV.
+
+    Attributes:
+        json_file (str): The path to the input JSON file.
+        csv_file (Optional[str]): The path to the output CSV file (if specified).
+        results (List[Dict]): A list to store the parsed query results.
+        dashboard_name (str): The name of the global dashboard.
+    """
+
+    def __init__(self, json_file: str, csv_file: Optional[str] = None) -> None:
+        """
+        The constructor for PulseQueryViewer class.
+
+        Parameters:
+            json_file (str): The path to the input JSON file.
+            csv_file (Optional[str]): The path to the output CSV file (if specified).
+        """
+        self.json_file = json_file
+        self.csv_file = csv_file
         self.results = []
-        self.global_dashboard_name = ""
+        self.dashboard_name = ""
 
-    def read_json_file(self):
-        """Reads the JSON file and populates the data_dict attribute with its content."""
-        if not self.filename.endswith('.json'):
-            error_message = "The file must have a .json extension"
-            print(error_message)
-            logging.error(error_message)
-            sys.exit(1)
+    def run(self) -> None:
+        """
+        The main method to control the flow of the script.
+        """
+        if not self.json_file.endswith('.json'):
+            self.log_and_exit("The file must have a .json extension")
+        
+        self.load_json()
+        self.extract_queries()
+        
+        if self.csv_file:
+            self.write_csv()
+        else:
+            self.print_results()
 
+    def load_json(self) -> None:
+        """
+        Loads the JSON file and extracts the queries and dashboard name.
+        """
         try:
-            with open(self.filename, 'r') as f:
-                self.data_dict = json.load(f)
+            with open(self.json_file, 'r') as f:
+                data_dict = json.load(f)
+        except json.JSONDecodeError as e:
+            self.log_and_exit(f"Failed to decode JSON file: {str(e)}")
+        except FileNotFoundError:
+            self.log_and_exit("The specified JSON file was not found.")
         except Exception as e:
-            error_message = f"An error occurred while reading the file: {str(e)}"
-            print(error_message)
-            logging.error(error_message)
-            sys.exit(1)
-
-    def extract_queries(self):
-        """Extracts queries and related information from the data dictionary."""
-        self.global_dashboard_name = self.data_dict.get('dashboards', {}).get('list', [])[0].get('name', 'Global Dashboard Name Not Found')
-        for count, item in enumerate(self.data_dict.get('items', {}).get('list', []), start=1):
+            self.log_and_exit(f"An unexpected error occurred: {str(e)}")
+        
+        self.dashboard_name = data_dict.get('dashboards', {}).get('list', [{}])[0].get('name', '')
+        self.results = data_dict.get('items', {}).get('list', [])
+        
+    def extract_queries(self) -> None:
+        """
+        Extracts query information and populates the results list.
+        """
+        if not self.results:
+            print("No queries found in the JSON file.")
+            return
+        
+        for count, item in enumerate(self.results, start=1):
             name = item.get('name', 'Name not found')
             query = item.get('query', {}).get('queryVal', 'Query not found').replace('\n', ' ')
-            self.results.append({"Global Dashboard": self.global_dashboard_name, "Number": count, "Name": name, "Query": query})
+            self.results[count-1] = {"Dashboard": self.dashboard_name, "Number": count, "Name": name, "Query": query}
+            
+    def write_csv(self) -> None:
+        """
+        Writes the results to a CSV file.
+        """
+        try:
+            with open(self.csv_file, 'w', newline='', encoding='utf-8') as csvfile:
+                fieldnames = ['Dashboard', 'Number', 'Name', 'Query']
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
+    
+                writer.writeheader()
+                for row in self.results:
+                    writer.writerow(row)
+            print(f"Results have been written to {self.csv_file}")
+        except Exception as e:
+            self.log_and_exit(f"An error occurred while writing to the CSV file: {str(e)}")
 
-    def display_results(self):
-        """Prints the extracted information to the console."""
-        print(f"Global Dashboard: {self.global_dashboard_name}\n")
-        for result in self.results:
-            print(f"{result['Number']}. \033[91mName: {result['Name']}\033[0m")
-            print(f"\033[92mQuery: {result['Query']}\033[0m\n")
+    def print_results(self) -> None:
+        """
+        Prints the results to the console with colored output, including the Global Dashboard name.
+        """
+        RED = '\033[91m'
+        GREEN = '\033[92m'
+        YELLOW = '\033[93m'
+        END = '\033[0m'
 
-    def save_to_csv(self):
-        """Saves the extracted information to a CSV file."""
-        if self.csv_filename:
-            try:
-                with open(self.csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
-                    fieldnames = ['Global Dashboard', 'Number', 'Name', 'Query']
-                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
+        print(f"    {YELLOW}Global Dashboard: {self.dashboard_name}{END}\n")
+        
+        for item in self.results:
+            print(f"    {item['Number']}. {RED}Name: {item['Name']}{END}")
+            print(f"    {GREEN}Query: {item['Query']}{END}\n")
 
-                    writer.writeheader()
-                    for row in self.results:
-                        writer.writerow(row)
-                print(f"Results have been written to {self.csv_filename}")
-            except Exception as e:
-                error_message = f"An error occurred while writing to the CSV file: {str(e)}"
-                print(error_message)
-                logging.error(error_message)
-                sys.exit(1)
+    @staticmethod
+    def log_and_exit(message: str) -> None:
+        """
+        Logs an error message to ERROR.log, prints it to the console, and exits the script.
 
+        Parameters:
+            message (str): The error message to log and print.
+        """
+        print(message)
+        logging.error(message)
+        sys.exit(1)
 
 def main():
-    parser = argparse.ArgumentParser(description='PulseQueryViewer: A tool for viewing QRadar dashboard queries and details.')
+    """
+    Main function to handle command line arguments and run the script.
+    """
+    parser = argparse.ArgumentParser(description='PulseQueryViewer by Pascal Weber (zoldax)')
     parser.add_argument('-f', '--file', help='Name of the JSON file', required=True)
     parser.add_argument('-c', '--csv', help='Name of the output CSV file (optional)')
     args = parser.parse_args()
-
+    
     viewer = PulseQueryViewer(args.file, args.csv)
-    viewer.read_json_file()
-    viewer.extract_queries()
-
-    if args.csv:
-        viewer.save_to_csv()
-    else:
-        viewer.display_results()
-
+    viewer.run()
 
 if __name__ == "__main__":
     main()
