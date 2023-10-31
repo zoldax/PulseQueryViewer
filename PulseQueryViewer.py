@@ -38,6 +38,8 @@ import logging
 import argparse
 import csv
 from typing import List, Dict, Optional
+import os
+import datetime
 
 # Setting up logging
 logging.basicConfig(filename='PulseQueryViewer.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -72,9 +74,28 @@ class PulseQueryViewer:
         self.extract_queries()
 
         if self.csv_file:
+            self.handle_existing_csv()
             self.write_csv()
         else:
             self.print_results()
+
+    def handle_existing_csv(self) -> None:
+        """
+        Handles the case if the CSV file already exists.
+        Asks the user if they want to overwrite the file.
+        If yes, renames the existing file and proceeds to write the new CSV file.
+        If no, exits the script.
+        """
+        if os.path.exists(self.csv_file):
+            overwrite = input(f"The file {self.csv_file} already exists. Do you want to overwrite it? (y/n): ").strip().lower()
+            if overwrite != 'y':
+                print("Exiting without writing to CSV.")
+                sys.exit(0)
+            else:
+                now = datetime.datetime.now()
+                new_name = f"{self.csv_file[:-4]}_{now.strftime('%Y%m%d_%H%M%S')}.old{self.csv_file[-4:]}"
+                os.rename(self.csv_file, new_name)
+                print(f"The existing file has been renamed to {new_name}")
 
     def load_json(self) -> None:
         """
@@ -149,56 +170,42 @@ class PulseQueryViewer:
         for item in self.results:
             print(f"    {item['Number']}. {RED}Name: {item['Name']}{END}")
             print(f"    {GREEN}Query: {item['Query']}{END}\n")
+        print("Total queries:", len(self.results))
+        logging.info(f"Results printed to console successfully. Total queries: {len(self.results)}")
 
-        logging.info("Results printed to console")
-
-    @staticmethod
-    def log_and_exit(message: str, level=logging.ERROR) -> None:
+    def log_and_exit(self, msg: str, level: int) -> None:
         """
-        Logs an error message to ERROR.log, prints it to the console, and exits the script.
-        ...
+        Logs a message and exits the script.
+        :param msg: The message to log
+        :param level: The logging level
         """
-        print(message)
-
-        if level == logging.DEBUG:
-            logging.debug(message)
-        elif level == logging.INFO:
-            logging.info(message)
-        elif level == logging.WARNING:
-            logging.warning(message)
-        elif level == logging.ERROR:
-            logging.error(message)
-        elif level == logging.CRITICAL:
-            logging.critical(message)
-        else:
-            logging.error("Invalid logging level specified")
-
+        logging.log(level, msg)
+        print(msg)
         sys.exit(1)
 
-def main():
+def parse_arguments() -> argparse.Namespace:
     """
-    Main function to handle command line arguments and run the script.
+    Parses command-line arguments.
     """
-    script_version = "1.0"
-
-    parser = argparse.ArgumentParser(description='PulseQueryViewer by Pascal Weber (zoldax)')
-    parser.add_argument('-f', '--file', help='Name of the JSON file', required=False)
-    parser.add_argument('-c', '--csv', help='Name of the output CSV file (optional)', required=False)
-    parser.add_argument('--version', action='version', version=f'%(prog)s {script_version}', help='Show the version of the script and exit')
-
-    args = parser.parse_args()
+    parser = argparse.ArgumentParser(description="Parse QRadar Pulse dashboard JSON exports.")
+    parser.add_argument("-f", "--file", required=True, help="Specify the input JSON file")
+    parser.add_argument("-c", "--csv", help="Specify the output CSV file")
+    parser.add_argument("--version", action="version", version="PulseQueryViewer 1.1")
 
     # Check if no arguments were provided
     if len(sys.argv) == 1:
-        parser.print_help(sys.stderr)  # Print help information to stderr
+        parser.print_help(sys.stderr)
         sys.exit(1)
 
-    if args.file:
-        pqv = PulseQueryViewer(json_file=args.file, csv_file=args.csv)
-        pqv.run()
-    else:
-        print("You must specify a JSON file with the -f option. Use -h for help.")
-        sys.exit(1)
+    return parser.parse_args()
+
+def main() -> None:
+    """
+    The main entry point of the script.
+    """
+    args = parse_arguments()
+    viewer = PulseQueryViewer(args.file, args.csv)
+    viewer.run()
 
 if __name__ == "__main__":
     main()
