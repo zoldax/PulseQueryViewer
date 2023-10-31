@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-PulseQueryViewer: A script to parse QRadar JSON exports, displaying the data in console or converting it to CSV.
+PulseQueryViewer: A script to parse QRadar Pulse dashboard JSON exports, displaying the widget name and AQL query data in console or converting it to CSV.
 
 Author: Pascal Weber (zoldax)
 
