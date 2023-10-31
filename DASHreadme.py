@@ -3,17 +3,16 @@
 import json
 import sys
 import logging
+import argparse
 
 # Set up logging
 logging.basicConfig(filename='ERROR.log', level=logging.ERROR)
 
-if len(sys.argv) != 2:
-    error_message = "Usage: python DASHreadme.py file.json"
-    print(error_message)
-    logging.error(error_message)
-    sys.exit(1)
+parser = argparse.ArgumentParser(description='DASHreadme by Pascal Weber (zoldax)')
+parser.add_argument('-f', '--file', help='Name of the JSON file', required=True)
+args = parser.parse_args()
 
-filename = sys.argv[1]
+filename = args.file
 if not filename.endswith('.json'):
     error_message = "The file must have a .json extension"
     print(error_message)
