@@ -33,7 +33,7 @@ except Exception as e:
 results = []
 for count, item in enumerate(data_dict.get('items', {}).get('list', []), start=1):
     name = item.get('name', 'Name not found')
-    query = item.get('query', {}).get('queryVal', 'Query not found')
+    query = item.get('query', {}).get('queryVal', 'Query not found').replace('\n', ' ')
     results.append({"Number": count, "Name": name, "Query": query})
     if not args.csv:
         print(f"{count}. \033[91mName: {name}\033[0m")
@@ -54,4 +54,3 @@ if args.csv:
         print(error_message)
         logging.error(error_message)
         sys.exit(1)
-
