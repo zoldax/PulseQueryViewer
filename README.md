@@ -62,3 +62,6 @@ The script includes error handling for various scenarios such as missing input f
 ## ⚠️ Disclaimer
 This script is provided "as is," without warranty of any kind. The author and contributors are not responsible for any issues arising from the use of this script. By using this script, you agree to the terms and conditions of the Apache License, Version 2.0.
 
+Q1 LABS, QRADAR and the 'Q' Logo are trademarks or registered trademarks of IBM Corp. All other trademarks are the property of their respective owners.
+
+IBM, the IBM logo, and ibm.com are trademarks or registered trademarks of International Business Machines Corp., registered in many jurisdictions worldwide. Other product and service names might be trademarks of IBM or other companies.
