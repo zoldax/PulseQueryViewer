@@ -40,42 +40,37 @@ import csv
 from typing import List, Dict, Optional
 
 # Setting up logging
-logging.basicConfig(filename='ERROR.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='PulseQueryViewer.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class PulseQueryViewer:
     """
     A class to parse QRadar JSON exports and convert them to a readable format or CSV.
-
-    Attributes:
-        json_file (str): The path to the input JSON file.
-        csv_file (Optional[str]): The path to the output CSV file (if specified).
-        results (List[Dict]): A list to store the parsed query results.
-        dashboard_name (str): The name of the global dashboard.
+    ...
     """
 
     def __init__(self, json_file: str, csv_file: Optional[str] = None) -> None:
         """
         The constructor for PulseQueryViewer class.
-
-        Parameters:
-            json_file (str): The path to the input JSON file.
-            csv_file (Optional[str]): The path to the output CSV file (if specified).
+        ...
         """
         self.json_file = json_file
         self.csv_file = csv_file
         self.results = []
         self.dashboard_name = ""
+        logging.info(f"Initialized PulseQueryViewer with JSON file: {json_file} and CSV file: {csv_file}")
 
     def run(self) -> None:
         """
         The main method to control the flow of the script.
         """
+        logging.debug("Running PulseQueryViewer")
+
         if not self.json_file.endswith('.json'):
-            self.log_and_exit("The file must have a .json extension")
-        
+            self.log_and_exit("The file must have a .json extension", level=logging.ERROR)
+
         self.load_json()
         self.extract_queries()
-        
+
         if self.csv_file:
             self.write_csv()
         else:
@@ -85,36 +80,45 @@ class PulseQueryViewer:
         """
         Loads the JSON file and extracts the queries and dashboard name.
         """
+        logging.info("Loading JSON data")
+
         try:
             with open(self.json_file, 'r') as f:
                 data_dict = json.load(f)
+            logging.debug("JSON data loaded successfully")
         except json.JSONDecodeError as e:
-            self.log_and_exit(f"Failed to decode JSON file: {str(e)}")
+            self.log_and_exit(f"Failed to decode JSON file: {str(e)}", level=logging.ERROR)
         except FileNotFoundError:
-            self.log_and_exit("The specified JSON file was not found.")
+            self.log_and_exit("The specified JSON file was not found.", level=logging.ERROR)
         except Exception as e:
-            self.log_and_exit(f"An unexpected error occurred: {str(e)}")
-        
+            self.log_and_exit(f"An unexpected error occurred: {str(e)}", level=logging.ERROR)
+
         self.dashboard_name = data_dict.get('dashboards', {}).get('list', [{}])[0].get('name', '')
         self.results = data_dict.get('items', {}).get('list', [])
-        
+        logging.info("Queries and Dashboard name extracted")
+
     def extract_queries(self) -> None:
         """
         Extracts query information and populates the results list.
         """
         if not self.results:
+            logging.warning("No queries found in the JSON file.")
             print("No queries found in the JSON file.")
             return
-        
+
+        logging.info("Extracting queries")
         for count, item in enumerate(self.results, start=1):
             name = item.get('name', 'Name not found')
             query = item.get('query', {}).get('queryVal', 'Query not found').replace('\n', ' ')
             self.results[count-1] = {"Dashboard": self.dashboard_name, "Number": count, "Name": name, "Query": query}
-            
+        logging.debug("Queries extracted and results populated")
+
     def write_csv(self) -> None:
         """
         Writes the results to a CSV file.
         """
+        logging.info(f"Writing results to CSV file: {self.csv_file}")
+
         try:
             with open(self.csv_file, 'w', newline='', encoding='utf-8') as csvfile:
                 fieldnames = ['Dashboard', 'Number', 'Name', 'Query']
@@ -127,8 +131,9 @@ class PulseQueryViewer:
                     line_count += 1
             print(f"Results have been written to {self.csv_file}")
             print(f"Total lines written: {line_count}")
+            logging.info(f"Results written to {self.csv_file} successfully. Total lines written: {line_count}")
         except Exception as e:
-            self.log_and_exit(f"An error occurred while writing to the CSV file: {str(e)}")
+            self.log_and_exit(f"An error occurred while writing to the CSV file: {str(e)}", level=logging.ERROR)
 
     def print_results(self) -> None:
         """
@@ -140,21 +145,34 @@ class PulseQueryViewer:
         END = '\033[0m'
 
         print(f"    {YELLOW}Global Dashboard: {self.dashboard_name}{END}\n")
-        
+
         for item in self.results:
             print(f"    {item['Number']}. {RED}Name: {item['Name']}{END}")
             print(f"    {GREEN}Query: {item['Query']}{END}\n")
 
+        logging.info("Results printed to console")
+
     @staticmethod
-    def log_and_exit(message: str) -> None:
+    def log_and_exit(message: str, level=logging.ERROR) -> None:
         """
         Logs an error message to ERROR.log, prints it to the console, and exits the script.
-
-        Parameters:
-            message (str): The error message to log and print.
+        ...
         """
         print(message)
-        logging.error(message)
+
+        if level == logging.DEBUG:
+            logging.debug(message)
+        elif level == logging.INFO:
+            logging.info(message)
+        elif level == logging.WARNING:
+            logging.warning(message)
+        elif level == logging.ERROR:
+            logging.error(message)
+        elif level == logging.CRITICAL:
+            logging.critical(message)
+        else:
+            logging.error("Invalid logging level specified")
+
         sys.exit(1)
 
 def main():
@@ -170,12 +188,17 @@ def main():
 
     args = parser.parse_args()
 
+    # Check if no arguments were provided
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)  # Print help information to stderr
+        sys.exit(1)
+
     if args.file:
-        viewer = PulseQueryViewer(args.file, args.csv)
-        viewer.run()
+        pqv = PulseQueryViewer(json_file=args.file, csv_file=args.csv)
+        pqv.run()
     else:
-        parser.print_help()
+        print("You must specify a JSON file with the -f option. Use -h for help.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
-
