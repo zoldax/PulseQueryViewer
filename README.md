@@ -1,4 +1,4 @@
-# 😃 PulseQueryViewer for IBM QRadar
+# PulseQueryViewer for IBM QRadar
 
 ## 📚 Table of Contents
 1. [Description](#description)
@@ -13,15 +13,14 @@
 10. [Disclaimer](#disclaimer)
 
 ## 📝 Description
-PulseQueryViewer is a Python script designed to parse QRadar JSON exports, displaying the query results in a color-coded console output or converting them to a CSV file. It is meant for users who work with QRadar and need a quick and efficient way to view or convert their query results.
+PulseQueryViewer is a Python script designed to parse QRadar Pulse dashboard JSON exports, displaying the query results in a color-coded console output or converting them to a CSV file. It is meant for users who work with QRadar and need a quick and efficient way to view the AQL queries associated to dasboard widgets.
 
 ## 🛠 Details
 **Author:** Pascal Weber (zoldax)  
-**Date:** 2023-10-31  
 **Version:** 1.0  
 **License:** Apache License, Version 2.0
 
-The script is designed to be user-friendly and efficient, ensuring that even large JSON files can be processed without significant impact on system performance.
+The script is designed to be user-friendly and efficient.
 
 ## 🔒 Requirements
 - Python 3.x
@@ -46,7 +45,7 @@ python PulseQueryViewer.py -f input_file.json [-c output_file.csv]
 - A CSV file of the parsed data (if specified with the `-c` option).
 
 ## 🎯 Functionalities and Key Functions
-- **load_json:** Loads the JSON file and extracts the queries and dashboard name.
+- **load_json:** Loads the JSON Pulse exported Dashboard file and extracts the queries and dashboard name.
 - **extract_queries:** Extracts query information and populates the results list.
 - **write_csv:** Writes the results to a CSV file.
 - **print_results:** Prints the results to the console with color-coded output.
@@ -56,7 +55,7 @@ python PulseQueryViewer.py -f input_file.json [-c output_file.csv]
 The script includes error handling for various scenarios such as missing input files, incorrect file extensions, and issues during file processing. All errors are logged to `ERROR.log`.
 
 ## 📝 Notes
-- Make sure that the input JSON file follows the QRadar export format.
+- Make sure that the input JSON file follows the QRadar Pulse Dashboard export format.
 - The script is case-sensitive when dealing with file paths and extensions.
 
 ## ⚠️ Disclaimer
