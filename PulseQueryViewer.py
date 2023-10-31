@@ -37,24 +37,28 @@ import sys
 import logging
 import argparse
 import csv
-from typing import List, Dict, Optional
 import os
 import datetime
+from typing import List, Dict, Optional
+
+# Constants
+LOG_FILENAME = 'PulseQueryViewer.log'
+LOG_LEVEL = logging.DEBUG
+LOG_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+JSON_EXT = '.json'
+CSV_EXT = '.csv'
+OLD_EXT = '.old'
+RED = '\033[91m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+END = '\033[0m'
+VERSION = "PulseQueryViewer 1.1"
 
 # Setting up logging
-logging.basicConfig(filename='PulseQueryViewer.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename=LOG_FILENAME, level=LOG_LEVEL, format=LOG_FORMAT)
 
 class PulseQueryViewer:
-    """
-    A class to parse QRadar JSON exports and convert them to a readable format or CSV.
-    ...
-    """
-
     def __init__(self, json_file: str, csv_file: Optional[str] = None) -> None:
-        """
-        The constructor for PulseQueryViewer class.
-        ...
-        """
         self.json_file = json_file
         self.csv_file = csv_file
         self.results = []
@@ -62,12 +66,9 @@ class PulseQueryViewer:
         logging.info(f"Initialized PulseQueryViewer with JSON file: {json_file} and CSV file: {csv_file}")
 
     def run(self) -> None:
-        """
-        The main method to control the flow of the script.
-        """
         logging.debug("Running PulseQueryViewer")
 
-        if not self.json_file.endswith('.json'):
+        if not self.json_file.endswith(JSON_EXT):
             self.log_and_exit("The file must have a .json extension", level=logging.ERROR)
 
         self.load_json()
@@ -80,12 +81,6 @@ class PulseQueryViewer:
             self.print_results()
 
     def handle_existing_csv(self) -> None:
-        """
-        Handles the case if the CSV file already exists.
-        Asks the user if they want to overwrite the file.
-        If yes, renames the existing file and proceeds to write the new CSV file.
-        If no, exits the script.
-        """
         if os.path.exists(self.csv_file):
             overwrite = input(f"The file {self.csv_file} already exists. Do you want to overwrite it? (y/n): ").strip().lower()
             if overwrite != 'y':
@@ -93,16 +88,12 @@ class PulseQueryViewer:
                 sys.exit(0)
             else:
                 now = datetime.datetime.now()
-                new_name = f"{self.csv_file[:-4]}_{now.strftime('%Y%m%d_%H%M%S')}.old{self.csv_file[-4:]}"
+                new_name = f"{self.csv_file[:-4]}_{now.strftime('%Y%m%d_%H%M%S')}{OLD_EXT}{CSV_EXT}"
                 os.rename(self.csv_file, new_name)
                 print(f"The existing file has been renamed to {new_name}")
 
     def load_json(self) -> None:
-        """
-        Loads the JSON file and extracts the queries and dashboard name.
-        """
         logging.info("Loading JSON data")
-
         try:
             with open(self.json_file, 'r') as f:
                 data_dict = json.load(f)
@@ -119,9 +110,6 @@ class PulseQueryViewer:
         logging.info("Queries and Dashboard name extracted")
 
     def extract_queries(self) -> None:
-        """
-        Extracts query information and populates the results list.
-        """
         if not self.results:
             logging.warning("No queries found in the JSON file.")
             print("No queries found in the JSON file.")
@@ -135,11 +123,7 @@ class PulseQueryViewer:
         logging.debug("Queries extracted and results populated")
 
     def write_csv(self) -> None:
-        """
-        Writes the results to a CSV file.
-        """
         logging.info(f"Writing results to CSV file: {self.csv_file}")
-
         try:
             with open(self.csv_file, 'w', newline='', encoding='utf-8') as csvfile:
                 fieldnames = ['Dashboard', 'Number', 'Name', 'Query']
@@ -157,14 +141,6 @@ class PulseQueryViewer:
             self.log_and_exit(f"An error occurred while writing to the CSV file: {str(e)}", level=logging.ERROR)
 
     def print_results(self) -> None:
-        """
-        Prints the results to the console with colored output, including the Global Dashboard name.
-        """
-        RED = '\033[91m'
-        GREEN = '\033[92m'
-        YELLOW = '\033[93m'
-        END = '\033[0m'
-
         print(f"    {YELLOW}Global Dashboard: {self.dashboard_name}{END}\n")
 
         for item in self.results:
@@ -174,38 +150,26 @@ class PulseQueryViewer:
         logging.info(f"Results printed to console successfully. Total queries: {len(self.results)}")
 
     def log_and_exit(self, msg: str, level: int) -> None:
-        """
-        Logs a message and exits the script.
-        :param msg: The message to log
-        :param level: The logging level
-        """
         logging.log(level, msg)
         print(msg)
         sys.exit(1)
 
 def parse_arguments() -> argparse.Namespace:
-    """
-    Parses command-line arguments.
-    """
     parser = argparse.ArgumentParser(description="Parse QRadar Pulse dashboard JSON exports.")
     parser.add_argument("-f", "--file", required=True, help="Specify the input JSON file")
     parser.add_argument("-c", "--csv", help="Specify the output CSV file")
-    parser.add_argument("--version", action="version", version="PulseQueryViewer 1.1")
-
+    parser.add_argument("--version", action="version", version=VERSION)
     # Check if no arguments were provided
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
-
     return parser.parse_args()
 
 def main() -> None:
-    """
-    The main entry point of the script.
-    """
     args = parse_arguments()
     viewer = PulseQueryViewer(args.file, args.csv)
     viewer.run()
 
 if __name__ == "__main__":
     main()
+
