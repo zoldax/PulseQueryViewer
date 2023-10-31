@@ -35,6 +35,8 @@ python PulseQueryViewer.py -f input_file.json [-c output_file.csv]
 **Parameters:**
 - `-f, --file`: Specify the input JSON file (required).
 - `-c, --csv`: Specify the output CSV file (optional).
+- `--version`: Show the version of the script.
+
 
 ## 📥 Inputs
 - A JSON file exported from QRadar containing the query results.
