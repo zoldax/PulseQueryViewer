@@ -1,33 +1,35 @@
 #!/usr/bin/env python3
 
 """
-PulseQueryViewer: A script to parse QRadar Pulse dashboard JSON exports, displaying the widget name and AQL query data in console or converting it to CSV.
-
-Author: Pascal Weber (zoldax)
-Copyright 2023 Pascal Weber (zoldax) / Abakus Sécurité
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+PulseQueryViewer: A script to parse QRadar Pulse dashboard JSON exports, displaying the widget name and AQL query data in console or converting it to CSV and Markdown.
 
 Usage:
-    python PulseQueryViewer.py -f input_file.json [-c output_file.csv]
+    python PulseQueryViewer.py -f input_file1.json input_file2.json ... [-c output_file.csv] [-m output_file.md]
 
 Parameters:
-    -f, --file: Specify the input JSON file (required).
+    -f, --file: Specify the input JSON files, separated by spaces (required).
     -c, --csv: Specify the output CSV file (optional).
+    -m, --markdown: Specify the output Markdown file (optional).
     --version: Show the version of the script.
 
 Outputs:
     - Console output of the parsed data.
-    - CSV file of the parsed data (if specified).
+    - A single CSV file of the parsed data from all input JSON files (if specified).
+    - A single Markdown file of the parsed data from all input JSON files (if specified).
+
+   Copyright 2023 Pascal Weber (zoldax) / Abakus Sécurité
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 """
 
 import json
@@ -45,37 +47,33 @@ LOG_LEVEL = logging.DEBUG              # Logging level
 LOG_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'  # Logging format
 JSON_EXT = '.json'                     # Expected JSON file extension
 CSV_EXT = '.csv'                       # Expected CSV file extension
+MD_EXT = '.md'                         # Expected Markdown file extension
 OLD_EXT = '.old'                       # Extension for old files during overwriting
 RED = '\033[91m'                       # ANSI code for red color
 GREEN = '\033[92m'                     # ANSI code for green color
 YELLOW = '\033[93m'                    # ANSI code for yellow color
 END = '\033[0m'                        # ANSI code to end coloring
-VERSION = "PulseQueryViewer 1.1"       # Version of the script
+VERSION = "PulseQueryViewer 1.2"       # Version of the script
 
 # Configure logging to write logs to file and print them on the console
 logging.basicConfig(filename=LOG_FILENAME, level=LOG_LEVEL, format=LOG_FORMAT)
 
 class PulseQueryViewer:
-    """
-    Main class to handle parsing and displaying of QRadar Pulse dashboard queries.
-    """
-    def __init__(self, json_files: List[str], csv_file: Optional[str] = None) -> None:
-        """
-        Initializes the PulseQueryViewer with input and output file paths.
-
-        :param json_files: Paths to the input JSON files (a list).
-        :param csv_file: Optional path to the output CSV file.
-        """
+    def __init__(self, json_files: List[str], csv_file: Optional[str] = None, markdown_file: Optional[str] = None) -> None:
         self.json_files = json_files
         self.csv_file = csv_file
+        self.markdown_file = markdown_file
         self.results = []
-        logging.info(f"Initialized PulseQueryViewer with JSON files: {json_files} and CSV file: {csv_file}")
+        logging.info(f"Initialized PulseQueryViewer with JSON files: {json_files}, CSV file: {csv_file}, and Markdown file: {markdown_file}")
 
     def run(self) -> None:
         """
         Main execution method to parse queries and display or save them.
         """
         logging.debug("Running PulseQueryViewer")
+
+        if self.markdown_file:
+            self.handle_existing_file(self.markdown_file, MD_EXT)
 
         if self.csv_file:
             self.handle_existing_csv()
@@ -94,8 +92,55 @@ class PulseQueryViewer:
 
             if self.csv_file:      # If CSV file is specified, write the results to it
                 self.write_csv()
+            elif self.markdown_file:      # If Markdown file is specified, write the results to it
+                self.write_markdown()
             else:                  # Otherwise, print the results to console
                 self.print_results()
+
+    def write_markdown(self) -> None:
+        """
+        Writes the extracted queries to a Markdown file.
+        """
+        logging.info(f"Writing results to Markdown file: {self.markdown_file}")
+        try:
+            with open(self.markdown_file, 'a', encoding='utf-8') as mdfile:
+                if os.stat(self.markdown_file).st_size == 0:  # Write header if the file is empty
+                    mdfile.write("# QRadar Pulse Dashboard Queries\n\n")
+
+                line_count = 0
+                for row in self.results:
+                    mdfile.write(f"## Widget Number: {row['Number']} - {row['Name']}\n")
+                    mdfile.write(f"**Dashboard**: {row['Dashboard']}\n\n")
+                    mdfile.write("```sql\n")
+                    mdfile.write(f"{row['Query']}\n")
+                    mdfile.write("```\n\n")
+                    line_count += 1
+            print(f"Results have been appended to {self.markdown_file}")
+            print(f"Total widgets written: {line_count}")
+            logging.info(f"Results written to {self.markdown_file} successfully. Total widgets written: {line_count}")
+        except PermissionError:
+            self.log_and_exit("Permission denied to write to the specified Markdown file. Please check the file permissions.", level=logging.ERROR)
+        except Exception as e:
+            self.log_and_exit(f"An error occurred while writing to the Markdown file: {str(e)}", level=logging.ERROR)
+
+    def handle_existing_file(self, file_path: str, file_ext: str) -> None:
+        """
+        Handles existing output file if the specified file already exists.
+
+        :param file_path: Path to the output file.
+        :param file_ext: Expected file extension.
+        """
+        if os.path.exists(file_path):
+            overwrite = input(f"The file {file_path} already exists. Do you want to overwrite it? (y/n): ").strip().lower()
+            if overwrite != 'y':
+                print(f"Exiting without writing to {file_ext.upper()} file.")
+                sys.exit(0)
+            else:
+                # Rename existing file by appending a timestamp and '.old' before the file extension
+                now = datetime.datetime.now()
+                new_name = f"{file_path[:-len(file_ext)]}_{now.strftime('%Y%m%d_%H%M%S')}{OLD_EXT}{file_ext}"
+                os.rename(file_path, new_name)
+                print(f"The existing file has been renamed to {new_name}")
 
     def handle_existing_csv(self) -> None:
         """
@@ -201,20 +246,19 @@ class PulseQueryViewer:
         print(RED + message + END)
         sys.exit(1)
 
-
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Parse QRadar Pulse dashboard queries from JSON exports.")
+    parser = argparse.ArgumentParser(description="PulseQueryViewer by Pascal Weber / Abakus Sécurité - Parse QRadar Pulse dashboard queries from JSON exports.")
     parser.add_argument("-f", "--file", nargs='+', help="Specify the input JSON files.", required=True)
     parser.add_argument("-c", "--csv", help="Specify the output CSV file. (optional)", required=False)
+    parser.add_argument("-m", "--markdown", help="Specify the output Markdown file. (optional)", required=False)
     parser.add_argument("--version", help="Show the version of the script", action='version', version=VERSION)
-
+    
     # Check if no arguments were provided
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
+    
     args = parser.parse_args()
-
-    # Initialize and run the PulseQueryViewer
-    pqv = PulseQueryViewer(json_files=args.file, csv_file=args.csv)
+    
+    pqv = PulseQueryViewer(json_files=args.file, csv_file=args.csv, markdown_file=args.markdown)
     pqv.run()
