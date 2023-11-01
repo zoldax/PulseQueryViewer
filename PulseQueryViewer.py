@@ -105,19 +105,27 @@ class PulseQueryViewer:
         try:
             with open(self.markdown_file, 'a', encoding='utf-8') as mdfile:
                 if os.stat(self.markdown_file).st_size == 0:  # Write header if the file is empty
-                    mdfile.write("# QRadar Pulse Dashboard Queries\n\n")
+                    mdfile.write("# QRadar Pulse Dashboard Queries 📊\n\n")
+                    mdfile.write("This document contains the queries extracted from various QRadar Pulse Dashboards. ")
+                    mdfile.write("Feel free to search and navigate through the document to find the information you need. 🚀\n\n")
+
+                mdfile.write(f"## 📁 JSON File: {os.path.basename(self.json_file)}\n")
+                mdfile.write("The queries below are extracted from the above mentioned JSON file.\n\n")
 
                 line_count = 0
                 for row in self.results:
-                    mdfile.write(f"## Widget Number: {row['Number']} - {row['Name']}\n")
-                    mdfile.write(f"**Dashboard**: {row['Dashboard']}\n\n")
+                    mdfile.write(f"### 📊 Widget Number: {row['Number']} - {row['Name']}\n")
+                    mdfile.write(f"**Dashboard**: {row['Dashboard']}  \n")
+                    mdfile.write("**Query**:  \n\n")
                     mdfile.write("```sql\n")
                     mdfile.write(f"{row['Query']}\n")
                     mdfile.write("```\n\n")
                     line_count += 1
-            print(f"Results have been appended to {self.markdown_file}")
-            print(f"Total widgets written: {line_count}")
+
+            print(f"✅ Results have been appended to {self.markdown_file}")
+            print(f"🔢 Total widgets written: {line_count}")
             logging.info(f"Results written to {self.markdown_file} successfully. Total widgets written: {line_count}")
+
         except PermissionError:
             self.log_and_exit("Permission denied to write to the specified Markdown file. Please check the file permissions.", level=logging.ERROR)
         except Exception as e:
