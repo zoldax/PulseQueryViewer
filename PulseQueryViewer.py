@@ -59,18 +59,17 @@ class PulseQueryViewer:
     """
     Main class to handle parsing and displaying of QRadar Pulse dashboard queries.
     """
-    def __init__(self, json_file: str, csv_file: Optional[str] = None) -> None:
+    def __init__(self, json_files: List[str], csv_file: Optional[str] = None) -> None:
         """
         Initializes the PulseQueryViewer with input and output file paths.
 
-        :param json_file: Path to the input JSON file.
+        :param json_files: Paths to the input JSON files (a list).
         :param csv_file: Optional path to the output CSV file.
         """
-        self.json_file = json_file
+        self.json_files = json_files
         self.csv_file = csv_file
         self.results = []
-        self.dashboard_name = ""
-        logging.info(f"Initialized PulseQueryViewer with JSON file: {json_file} and CSV file: {csv_file}")
+        logging.info(f"Initialized PulseQueryViewer with JSON files: {json_files} and CSV file: {csv_file}")
 
     def run(self) -> None:
         """
@@ -78,18 +77,25 @@ class PulseQueryViewer:
         """
         logging.debug("Running PulseQueryViewer")
 
-        # Check if the file has a .json extension
-        if not self.json_file.endswith(JSON_EXT):
-            self.log_and_exit("The file must have a .json extension", level=logging.ERROR)
-
-        self.load_json()       # Load and parse the JSON file
-        self.extract_queries() # Extract queries from the loaded JSON data
-
-        if self.csv_file:      # If CSV file is specified, write the results to it
+        if self.csv_file:
             self.handle_existing_csv()
-            self.write_csv()
-        else:                  # Otherwise, print the results to console
-            self.print_results()
+
+        for json_file in self.json_files:
+            self.json_file = json_file
+            self.dashboard_name = ""
+            self.results = []
+
+            # Check if the file has a .json extension
+            if not self.json_file.endswith(JSON_EXT):
+                self.log_and_exit("The file must have a .json extension", level=logging.ERROR)
+
+            self.load_json()       # Load and parse the JSON file
+            self.extract_queries() # Extract queries from the loaded JSON data
+
+            if self.csv_file:      # If CSV file is specified, write the results to it
+                self.write_csv()
+            else:                  # Otherwise, print the results to console
+                self.print_results()
 
     def handle_existing_csv(self) -> None:
         """
@@ -150,16 +156,19 @@ class PulseQueryViewer:
         """
         logging.info(f"Writing results to CSV file: {self.csv_file}")
         try:
-            with open(self.csv_file, 'w', newline='', encoding='utf-8') as csvfile:
-                fieldnames = ['Dashboard', 'Number', 'Name', 'Query']
+            with open(self.csv_file, 'a', newline='', encoding='utf-8') as csvfile:
+                fieldnames = ['File', 'Dashboard', 'Number', 'Name', 'Query']
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
 
-                writer.writeheader()
+                if csvfile.tell() == 0:  # Write header if the file is empty
+                    writer.writeheader()
+
                 line_count = 0
                 for row in self.results:
+                    row['File'] = os.path.basename(self.json_file)
                     writer.writerow(row)
                     line_count += 1
-            print(f"Results have been written to {self.csv_file}")
+            print(f"Results have been appended to {self.csv_file}")
             print(f"Total lines written: {line_count}")
             logging.info(f"Results written to {self.csv_file} successfully. Total lines written: {line_count}")
         except PermissionError:
@@ -193,9 +202,10 @@ class PulseQueryViewer:
         sys.exit(1)
 
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Parse QRadar Pulse dashboard queries from JSON exports.")
-    parser.add_argument("-f", "--file", help="Specify the input JSON file.", required=True)
+    parser.add_argument("-f", "--file", nargs='+', help="Specify the input JSON files.", required=True)
     parser.add_argument("-c", "--csv", help="Specify the output CSV file. (optional)", required=False)
     parser.add_argument("--version", help="Show the version of the script", action='version', version=VERSION)
 
@@ -206,6 +216,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Initialize and run the PulseQueryViewer
-    pqv = PulseQueryViewer(json_file=args.file, csv_file=args.csv)
+    pqv = PulseQueryViewer(json_files=args.file, csv_file=args.csv)
     pqv.run()
-
