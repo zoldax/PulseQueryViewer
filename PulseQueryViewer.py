@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 """
-PulseQueryViewer: A script to parse QRadar Pulse dashboard JSON exports, displaying the widget name and AQL query data in console or converting it to CSV and Markdown.
+PulseQueryViewer
+
+A script to parse QRadar Pulse dashboard JSON exports, displaying the widget name and AQL query data in the console,
+or converting it to CSV and Markdown.
 
 Usage:
     python PulseQueryViewer.py -f input_file1.json input_file2.json ... [-c output_file.csv] [-m output_file.md]
@@ -17,19 +20,15 @@ Outputs:
     - A single CSV file of the parsed data from all input JSON files (if specified).
     - A single Markdown file of the parsed data from all input JSON files (if specified).
 
-   Copyright 2023 Pascal Weber (zoldax) / Abakus Sécurité
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+Copyright 2023 Pascal Weber (zoldax) / Abakus Sécurité
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 """
 
 import json
@@ -59,7 +58,27 @@ VERSION = "PulseQueryViewer 1.2"       # Version of the script
 logging.basicConfig(filename=LOG_FILENAME, level=LOG_LEVEL, format=LOG_FORMAT)
 
 class PulseQueryViewer:
+    """
+    A class for the PulseQueryViewer tool.
+
+    This class handles the parsing of QRadar Pulse dashboard JSON exports, displaying the widget name and AQL query data,
+    and optionally converting the data to CSV or Markdown format.
+
+    Attributes:
+        json_files (List[str]): List of input JSON file paths.
+        csv_file (Optional[str]): Output CSV file path, if specified.
+        markdown_file (Optional[str]): Output Markdown file path, if specified.
+        results (List[Dict]): Extracted query results.
+    """
     def __init__(self, json_files: List[str], csv_file: Optional[str] = None, markdown_file: Optional[str] = None) -> None:
+        """
+        Initializes the PulseQueryViewer.
+
+        Args:
+            json_files (List[str]): List of input JSON file paths.
+            csv_file (Optional[str]): Output CSV file path, if specified.
+            markdown_file (Optional[str]): Output Markdown file path, if specified.
+        """
         self.json_files = json_files
         self.csv_file = csv_file
         self.markdown_file = markdown_file

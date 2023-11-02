@@ -2,6 +2,25 @@
 
 This document contains the queries extracted from various QRadar Pulse Dashboards. Feel free to search and navigate through the document to find the information you need. 🚀
 
+## 📁 JSON File: TBD-Pascal-Metriques.json
+The queries below are extracted from the above mentioned JSON file.
+
+### 📊 Widget Number: 1 - Managed Host Event Overview
+**Dashboard**: TBD-Pascal-Metriques  
+**Query**:  
+
+```sql
+Query not found
+```
+
+### 📊 Widget Number: 2 - Top 10 log sources by event count
+**Dashboard**: TBD-Pascal-Metriques  
+**Query**:  
+
+```sql
+SELECT starttime/(1000*60) as minute, (minute * (1000*60)) as stime, DATEFORMAT(starttime,'YYYY MM dd HH:mm:ss') as showTime, logsourcename(logSourceId) AS 'Log Source', SUM("eventCount") AS 'Event Count (Sum)', logsourceid as 'Log Source ID' from events where logsourceid in ( select logsourceid from ( select logsourceid, SUM("eventCount") AS 'Event Count (Sum)' from events where logSourceId not in (63,64,65,67,69) group by logSourceId order by "Event Count (Sum)" limit 10 last 2 hours ) ) GROUP BY minute, logSourceId order by minute ASC last 2 hours
+```
+
 ## 📁 JSON File: Abakus Sécurité - Stats Processor(4).json
 The queries below are extracted from the above mentioned JSON file.
 
@@ -139,24 +158,5 @@ select SUM("AVG_Flows per Second - Peak 1 Min") as FPS, "Flow Source" as FP, tim
 
 ```sql
 select ("AVG_Flows per Second - Peak 1 Min") as FPS, "Flow Source" as FP, time*1000 as epoch, epoch/(1000*60) as mymin, (FPS)/60 as myTOTALMB from globalview('Flow Rate (FPS)','DAILY') GROUP BY FP order by myTOTALMB desc last 2 DAYS
-```
-
-## 📁 JSON File: TBD-Pascal-Metriques.json
-The queries below are extracted from the above mentioned JSON file.
-
-### 📊 Widget Number: 1 - Managed Host Event Overview
-**Dashboard**: TBD-Pascal-Metriques  
-**Query**:  
-
-```sql
-Query not found
-```
-
-### 📊 Widget Number: 2 - Top 10 log sources by event count
-**Dashboard**: TBD-Pascal-Metriques  
-**Query**:  
-
-```sql
-SELECT starttime/(1000*60) as minute, (minute * (1000*60)) as stime, DATEFORMAT(starttime,'YYYY MM dd HH:mm:ss') as showTime, logsourcename(logSourceId) AS 'Log Source', SUM("eventCount") AS 'Event Count (Sum)', logsourceid as 'Log Source ID' from events where logsourceid in ( select logsourceid from ( select logsourceid, SUM("eventCount") AS 'Event Count (Sum)' from events where logSourceId not in (63,64,65,67,69) group by logSourceId order by "Event Count (Sum)" limit 10 last 2 hours ) ) GROUP BY minute, logSourceId order by minute ASC last 2 hours
 ```
 
