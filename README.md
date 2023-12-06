@@ -1,4 +1,10 @@
-# PulseQueryViewer for IBM QRadar
+# 🔍 PulseQueryViewer 🔍 for IBM QRadar SIEM
+
+PulseQueryViewer is a Python script for parsing QRadar PULSE Dashboard JSON exports, displaying the results in a color-coded console output or saving them to a CSV file or MD file.
+
+[![License](https://img.shields.io/github/license/zoldax/PulseQueryViewer?color=44CC11)](LICENSE)  [![Commit](https://img.shields.io/github/commit-activity/t/zoldax/PulseQueryViewer)](https://github.com/zoldax/PulseQueryViewer/commits/)  [![Views](https://hits.sh/github.com/zoldax/PulseQueryViewer.svg)](https://hits.sh/github.com/zoldax/PulseQueryViewer/) [![Last commit](https://img.shields.io/github/last-commit/zoldax/PulseQueryViewer/main)](https://github.com/zoldax/PulseQueryViewer/commits/main)
+
+---
 
 ## 📚 Table of Contents
 1. [Description](#description)
@@ -38,7 +44,7 @@ python PulseQueryViewer.py -f input_file1.json input_file2.json ... [-c output_f
 
 
 ## 📥 Inputs
-- A JSON file exported from QRadar containing the query results.
+- A JSON QRadar Pulse Dashboard file exported from QRadar.
 
 ## 📤 Outputs
 - Console output of the parsed data with color-coded information.
