@@ -13,27 +13,27 @@
 10. [Disclaimer](#disclaimer)
 
 ## 📝 Description
-PulseQueryViewer is a Python script designed to parse QRadar Pulse dashboard JSON exports, displaying the query results in a color-coded console output or converting them to a CSV file. It is meant for users who work with QRadar and need a quick and efficient way to view the AQL queries associated to dasboard widgets.
+PulseQueryViewer is a Python script designed to parse QRadar Pulse dashboard JSON exports, displaying the query results in a color-coded console output or converting them to a CSV filei or MARKDOWN file. It is meant for users who work with QRadar and need a quick and efficient way to view the AQL queries associated to dasboard widgets.
 
 ## 🛠 Details
 **Author:** Pascal Weber (zoldax)  
-**Version:** 1.0  
 **License:** Apache License, Version 2.0
 
-The script is designed to be user-friendly and efficient.
+This script is a tool for anyone working with QRadar Pulse dashboards, simplifying the process of exporting and analyzing data.
 
 ## 🔒 Requirements
 - Python 3.x
-- `argparse`, `json`, `sys`, `logging`, `csv` libraries (usually included with Python 3.x)
+- Required Python libraries: `json`, `sys`, `logging`, `argparse`, `csv`, `os`, `datetime` libraries (usually included with Python 3.x)
 
 ## 🚀 Usage
 ```bash
-python PulseQueryViewer.py -f input_file.json [-c output_file.csv]
+python PulseQueryViewer.py -f input_file1.json input_file2.json ... [-c output_file.csv] [-m output_file.md]
 ```
 
 **Parameters:**
 - `-f, --file`: Specify the input JSON file (required).
 - `-c, --csv`: Specify the output CSV file (optional).
+- `-m, --markdown`: Output Markdown file (optional).
 - `--version`: Show the version of the script.
 
 
@@ -43,16 +43,18 @@ python PulseQueryViewer.py -f input_file.json [-c output_file.csv]
 ## 📤 Outputs
 - Console output of the parsed data with color-coded information.
 - A CSV file of the parsed data (if specified with the `-c` option).
+- Markdown file of parsed data (if specified).
 
 ## 🎯 Functionalities and Key Functions
 - **load_json:** Loads the JSON Pulse exported Dashboard file and extracts the queries and dashboard name.
 - **extract_queries:** Extracts query information and populates the results list.
 - **write_csv:** Writes the results to a CSV file.
+- **write_markdown:** Writes the results to a md file.
 - **print_results:** Prints the results to the console with color-coded output.
 - **log_and_exit:** Logs an error message to ERROR.log, prints it to the console, and exits the script.
 
 ## 🚫 Error Handling
-The script includes error handling for various scenarios such as missing input files, incorrect file extensions, and issues during file processing. All errors are logged to `ERROR.log`.
+The script includes error handling for various scenarios such as missing input files, incorrect file extensions, and issues during file processing. All errors are logged to `PulseQueryViewer.log`.
 
 ## 📝 Notes
 - Make sure that the input JSON file follows the QRadar Pulse Dashboard export format.
