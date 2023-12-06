@@ -52,7 +52,7 @@ RED = '\033[91m'                       # ANSI code for red color
 GREEN = '\033[92m'                     # ANSI code for green color
 YELLOW = '\033[93m'                    # ANSI code for yellow color
 END = '\033[0m'                        # ANSI code to end coloring
-VERSION = "PulseQueryViewer 1.2"       # Version of the script
+VERSION = "PulseQueryViewer 1.2.1"       # Version of the script
 
 # Configure logging to write logs to file and print them on the console
 logging.basicConfig(filename=LOG_FILENAME, level=LOG_LEVEL, format=LOG_FORMAT)
