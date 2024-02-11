@@ -1,6 +1,6 @@
 # PulseQueryViewer Error Handling and Logging Summary 📜
 
-This document provides a summary of the error handling and logging capabilities of the PulseQueryViewer script.
+This document provides a summary of the error handling and logging capabilities of the PulseQueryViewer tool.
 
 ### 🖋️ Author
 - **Pascal Weber (zoldax)**
