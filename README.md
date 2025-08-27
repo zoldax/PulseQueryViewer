@@ -19,7 +19,16 @@ PulseQueryViewer is a Python script for parsing QRadar PULSE Dashboard JSON expo
 10. [Disclaimer](#disclaimer)
 
 ## 📝 Description
+In today’s SOC environments, dashboards are more than pretty charts — they’re the pulse of the security monitoring lifecycle. Analysts rely on them to visualize trends, define thresholds, and trigger alerts that matter.
+But here’s the catch: while QRadar Pulse makes it easy to build powerful dashboards from widgets and AQL queries, documenting them is another story. Export a dashboard and you’ll get… JSON. Useful for a machine, but not exactly analyst-friendly.
+We’ve seen this pain point across multiple clients:
+- Lack of documentation when exporting Pulse dashboards.
+- Analysts unsure which AQL query sits behind each widget.
+- No easy way to reuse or share queries in reports, audits, or CI/CD pipelines.
+That’s why we built PulseQueryViewer — a simple but powerful Python script to bring clarity to Pulse dashboard exports.
+
 PulseQueryViewer is a Python script designed to parse QRadar Pulse dashboard JSON exports, displaying the query results in a color-coded console output or converting them to a CSV filei or MARKDOWN file. It is meant for users who work with QRadar and need a quick and efficient way to view the AQL queries associated to dasboard widgets.
+
 
 ## 🛠 Details
 **Author:** Pascal Weber (zoldax)  
